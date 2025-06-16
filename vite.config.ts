@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
         sourcemap: false,
         outDir: 'dist',
         emptyOutDir: true,
-      }
+      },
+      base: '/speech-to-text/',
     };
 });
