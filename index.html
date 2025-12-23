@@ -1,17 +1,15 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dictation App</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
 
-    <script type="importmap">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dictation App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script type="importmap">
       {
         "imports": {
           "@google/genai": "https://esm.sh/@google/genai@^0.8.0",
@@ -19,146 +17,158 @@
         }
       }
     </script>
-    <script type="module" crossorigin src="/speech-to-text/assets/index-CUWv8sBX.js"></script>
-    <link rel="stylesheet" crossorigin href="/speech-to-text/assets/index-BAWIBMnz.css">
-  </head>
-  <body>
-    <div class="app-container">
-      <div class="main-content">
-        <div class="note-area">
-          <div class="note-header">
-            <div class="editor-title" contenteditable="true" placeholder="Başlıksız Not">
-              Başlıksız Not
-            </div>
-            <div class="tab-navigation-container">
-              <div class="tab-navigation">
-                <button class="tab-button active" data-tab="note">Düzenlenmiş</button>
-                <button class="tab-button" data-tab="raw">Ham</button>
-                <div class="active-tab-indicator"></div>
-              </div>
-            </div>
-          </div>
+  <script type="module" crossorigin src="/speech-to-text/assets/index-CTGU5Cjm.js"></script>
+  <link rel="stylesheet" crossorigin href="/speech-to-text/assets/index-DCiMVcXj.css">
+</head>
 
-          <div class="note-content-wrapper">
-            <div
-              id="polishedNote"
-              class="note-content active"
-              contenteditable="true"
-              placeholder="Düzenlenmiş notlarınız burada görünecek..."
-            ></div>
-            <div
-              id="rawTranscription"
-              class="note-content"
-              contenteditable="true"
-              placeholder="Ham transkripsiyon burada görünecek..."
-            ></div>
+<body>
+  <div class="app-container">
+    <div class="main-content">
+      <div class="note-area">
+        <div class="note-header">
+          <div class="editor-title" contenteditable="true" placeholder="Başlıksız Not">
+            Başlıksız Not
+          </div>
+          <div class="tab-navigation-container">
+            <div class="tab-navigation">
+              <button class="tab-button active" data-tab="note">Düzenlenmiş</button>
+              <button class="tab-button" data-tab="raw">Ham</button>
+              <div class="active-tab-indicator"></div>
+            </div>
           </div>
         </div>
 
-        <div class="recording-interface">
-          <div id="liveRecordingTitle" class="live-recording-title" style="display: none">
-            Kayıt Alınıyor
-          </div>
-          <canvas id="liveWaveformCanvas" style="display: none"></canvas>
-          <div id="liveRecordingTimerDisplay" class="live-recording-timer" style="display: none">
-            00:00.00
-          </div>
+        <div class="note-content-wrapper">
+          <div id="polishedNote" class="note-content active" contenteditable="true"
+            placeholder="Düzenlenmiş notlarınız burada görünecek..."></div>
+          <div id="rawTranscription" class="note-content" contenteditable="true"
+            placeholder="Ham transkripsiyon burada görünecek..."></div>
+        </div>
+      </div>
 
-          <div class="status-indicator">
-            <span id="recordingStatus" class="status-text">Kayıt almaya hazır</span>
-          </div>
+      <div class="recording-interface">
+        <div id="liveRecordingTitle" class="live-recording-title" style="display: none">
+          Kayıt Alınıyor
+        </div>
+        <canvas id="liveWaveformCanvas" style="display: none"></canvas>
+        <div id="liveRecordingTimerDisplay" class="live-recording-timer" style="display: none">
+          00:00.00
+        </div>
 
-          <div class="recording-controls">
-            <button class="action-button" id="themeToggleButton" title="Temayı Değiştir">
-              <i class="fas fa-sun"></i>
-            </button>
+        <div class="language-selector">
+          <select id="languageSelect" title="Dil Seçin">
+            <option value="tr" selected>🇹🇷 Türkçe</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="pt">🇵🇹 Português</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ar">🇸🇦 العربية</option>
+          </select>
+        </div>
 
-            <button id="recordButton" class="record-button" title="Kaydı Başlat/Durdur">
-              <div class="record-button-inner">
-                <i class="fas fa-microphone"></i>
-              </div>
-              <svg class="record-waves" viewBox="0 0 200 200">
-                <circle class="wave wave1" cx="100" cy="100" r="40" />
-                <circle class="wave wave2" cx="100" cy="100" r="70" />
-                <circle class="wave wave3" cx="100" cy="100" r="100" />
-              </svg>
-              <span class="record-text">Kaydet</span>
-            </button>
+        <div class="status-indicator">
+          <span id="recordingStatus" class="status-text">Kayıt almaya hazır</span>
+        </div>
 
-            <button class="action-button" id="newButton" title="Yeni Not / Temizle">
-              <i class="fas fa-file"></i>
-            </button>
+        <div class="recording-controls">
+          <button class="action-button" id="themeToggleButton" title="Temayı Değiştir">
+            <i class="fas fa-sun"></i>
+          </button>
 
-            <button class="action-button" id="downloadNoteButton" title="Notu İndir">
-              <i class="fas fa-download"></i>
-            </button>
-          </div>
+          <button id="recordButton" class="record-button" title="Kaydı Başlat/Durdur">
+            <div class="record-button-inner">
+              <i class="fas fa-microphone"></i>
+            </div>
+            <svg class="record-waves" viewBox="0 0 200 200">
+              <circle class="wave wave1" cx="100" cy="100" r="40" />
+              <circle class="wave wave2" cx="100" cy="100" r="70" />
+              <circle class="wave wave3" cx="100" cy="100" r="100" />
+            </svg>
+            <span class="record-text">Kaydet</span>
+          </button>
+
+          <button class="action-button with-label" id="newButton" title="Yeni Not Oluştur">
+            <i class="fas fa-plus"></i>
+            <span class="action-label">Yeni</span>
+          </button>
+
+          <button class="action-button with-label" id="downloadNoteButton" title="Notu İndir">
+            <i class="fas fa-download"></i>
+            <span class="action-label">İndir</span>
+          </button>
         </div>
       </div>
     </div>
+  </div>
 
-    <div id="micStatus" class="debug-panel"></div>
+  <div id="micStatus" class="debug-panel"></div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const tabNav = document.querySelector(".tab-navigation");
-        const tabButtons = tabNav.querySelectorAll(".tab-button");
-        const activeTabIndicator = tabNav.querySelector(".active-tab-indicator");
-        const noteContents = document.querySelectorAll(".note-content");
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const tabNav = document.querySelector(".tab-navigation");
+      const tabButtons = tabNav.querySelectorAll(".tab-button");
+      const activeTabIndicator = tabNav.querySelector(".active-tab-indicator");
+      const noteContents = document.querySelectorAll(".note-content");
 
-        function setActiveTab(activeButton, skipAnimation = false) {
-          if (!activeButton || !activeTabIndicator) return;
+      function setActiveTab(activeButton, skipAnimation = false) {
+        if (!activeButton || !activeTabIndicator) return;
 
-          tabButtons.forEach((btn) => btn.classList.remove("active"));
-          activeButton.classList.add("active");
+        tabButtons.forEach((btn) => btn.classList.remove("active"));
+        activeButton.classList.add("active");
 
-          const tabName = activeButton.getAttribute("data-tab");
-          noteContents.forEach((content) => content.classList.remove("active"));
+        const tabName = activeButton.getAttribute("data-tab");
+        noteContents.forEach((content) => content.classList.remove("active"));
 
-          if (tabName === "raw") {
-            document.getElementById("rawTranscription").classList.add("active");
-          } else {
-            document.getElementById("polishedNote").classList.add("active");
-          }
-
-          const originalTransition = activeTabIndicator.style.transition;
-          if (skipAnimation) {
-            activeTabIndicator.style.transition = "none";
-          } else {
-            activeTabIndicator.style.transition = "";
-          }
-
-          activeTabIndicator.style.left = `${activeButton.offsetLeft}px`;
-          activeTabIndicator.style.width = `${activeButton.offsetWidth}px`;
-
-          if (skipAnimation) {
-            activeTabIndicator.offsetHeight;
-            activeTabIndicator.style.transition = originalTransition;
-          }
+        if (tabName === "raw") {
+          document.getElementById("rawTranscription").classList.add("active");
+        } else {
+          document.getElementById("polishedNote").classList.add("active");
         }
 
-        tabButtons.forEach((button) => {
-          button.addEventListener("click", (e) => {
-            setActiveTab(e.currentTarget);
-          });
-        });
-
-        const initiallyActiveButton = tabNav.querySelector(".tab-button.active");
-        if (initiallyActiveButton) {
-          requestAnimationFrame(() => {
-            setActiveTab(initiallyActiveButton, true);
-          });
+        const originalTransition = activeTabIndicator.style.transition;
+        if (skipAnimation) {
+          activeTabIndicator.style.transition = "none";
+        } else {
+          activeTabIndicator.style.transition = "";
         }
 
-        window.addEventListener("resize", () => {
-          requestAnimationFrame(() => {
-            const currentActiveButton = tabNav.querySelector(".tab-button.active");
-            if (currentActiveButton) {
-              setActiveTab(currentActiveButton, true);
-            }
-          });
+        activeTabIndicator.style.left = `${activeButton.offsetLeft}px`;
+        activeTabIndicator.style.width = `${activeButton.offsetWidth}px`;
+
+        if (skipAnimation) {
+          activeTabIndicator.offsetHeight;
+          activeTabIndicator.style.transition = originalTransition;
+        }
+      }
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", (e) => {
+          setActiveTab(e.currentTarget);
         });
       });
-    </script>
+
+      const initiallyActiveButton = tabNav.querySelector(".tab-button.active");
+      if (initiallyActiveButton) {
+        requestAnimationFrame(() => {
+          setActiveTab(initiallyActiveButton, true);
+        });
+      }
+
+      window.addEventListener("resize", () => {
+        requestAnimationFrame(() => {
+          const currentActiveButton = tabNav.querySelector(".tab-button.active");
+          if (currentActiveButton) {
+            setActiveTab(currentActiveButton, true);
+          }
+        });
+      });
+    });
+  </script>
 </body>
+
 </html>
