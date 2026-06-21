@@ -8,7 +8,7 @@ import { WaveformVisualizer } from './core/waveform';
 import { RecordingTimer } from './core/timer';
 import { NoteManager } from './core/note-manager';
 import { RecordingUI } from './core/recording-ui';
-import { blobToBase64 } from './utils/audio';
+import { blobToBase64, normalizeAudioMimeType } from './utils/audio';
 
 export class VoiceNotesApp {
     private elements: DOMElements;
@@ -163,7 +163,7 @@ export class VoiceNotesApp {
         try {
             this.recordingUI.setStatus('Ses dönüştürülüyor...');
             const base64Audio = await blobToBase64(audioBlob);
-            const mimeType = this.audioService.getMimeType();
+            const mimeType = normalizeAudioMimeType(this.audioService.getMimeType());
 
             this.recordingUI.setStatus('Transkripsiyon alınıyor...');
             const langCode = this.getSelectedLanguage();

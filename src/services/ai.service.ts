@@ -28,6 +28,10 @@ export class AIService {
         });
 
         const data: APIResponse = await response.json();
+        if (!response.ok) {
+            const detail = (data as { detail?: string; errors?: unknown }).detail;
+            throw new Error(detail || data.error || `Transkripsiyon hatası (${response.status})`);
+        }
         if (!data.success) throw new Error(data.error || 'Transkripsiyon başarısız');
         return data.transcription || '';
     }

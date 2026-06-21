@@ -1,3 +1,9 @@
+/** Browsers often report e.g. `audio/webm;codecs=opus` — gateway allows base MIME only. */
+export function normalizeAudioMimeType(mime: string): string {
+    const base = mime.split(';')[0].trim().toLowerCase();
+    return base || 'audio/webm';
+}
+
 export function blobToBase64(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -12,5 +18,5 @@ export function blobToBase64(blob: Blob): Promise<string> {
 }
 
 export function getMimeType(recorder: MediaRecorder | null): string {
-    return recorder?.mimeType || 'audio/webm';
+    return normalizeAudioMimeType(recorder?.mimeType || 'audio/webm');
 }
