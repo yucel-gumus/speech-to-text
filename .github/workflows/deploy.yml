@@ -32,6 +32,7 @@ jobs:
           NODE_ENV: production
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_CLIENT_API_KEY: ${{ vars.VITE_CLIENT_API_KEY || vars.VITE_API_KEY }}
+          VITE_API_KEY: ${{ vars.VITE_API_KEY || vars.VITE_CLIENT_API_KEY }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
