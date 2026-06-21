@@ -1,9 +1,6 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? 'https://api.yucelgumus.dev' : 'http://127.0.0.1:8000');
-
-const API_KEY =
-  import.meta.env.VITE_CLIENT_API_KEY || import.meta.env.VITE_API_KEY || '';
+const BFF_URL =
+  import.meta.env.VITE_BFF_URL ||
+  (import.meta.env.PROD ? 'https://pages-bff.vercel.app' : 'http://127.0.0.1:3099');
 
 interface APIResponse {
     success: boolean;
@@ -14,12 +11,9 @@ interface APIResponse {
 
 export class AIService {
     async transcribe(base64Audio: string, mimeType: string, langCode: string): Promise<string> {
-        const response = await fetch(`${API_BASE_URL}/api/transcribe`, {
+        const response = await fetch(`${BFF_URL}/api/speech/transcribe`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': API_KEY,
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 audio_base64: base64Audio,
                 mime_type: mimeType,
@@ -37,12 +31,9 @@ export class AIService {
     }
 
     async polish(rawTranscription: string, langCode: string): Promise<string> {
-        const response = await fetch(`${API_BASE_URL}/api/polish`, {
+        const response = await fetch(`${BFF_URL}/api/speech/polish`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': API_KEY,
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 raw_transcription: rawTranscription,
                 language: langCode
