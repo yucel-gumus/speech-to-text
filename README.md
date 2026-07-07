@@ -1,113 +1,99 @@
-# 🎤 Sesli Not Uygulaması (`speech-to-text`)
+# 🎤 Sesli Not (AI-Powered Dictation & Audio Transcription App)
 
-Tarayıcıda **ses kaydı** alıp metne çeviren ve isteğe bağlı **AI ile düzenleme (polish)** yapan hafif Vite + TypeScript SPA. Tüm AI işlemleri **Gemini Gateway** üzerinden yapılır; GitHub Pages’ta anahtarlar **pages-bff** veya doğrudan gateway + CORS ile korunur.
-
-**Canlı:** [yucel-gumus.github.io/speech-to-text](https://yucel-gumus.github.io/speech-to-text/)  
-**GitHub:** [yucel-gumus/speech-to-text](https://github.com/yucel-gumus/speech-to-text)
+Sesli Not; tarayıcı üzerinden doğrudan ses kaydı almanızı, bu kaydı yapay zeka ile metne dönüştürmenizi (Transcription) ve ardından Gemini AI'ın gücüyle metni noktalama, paragraf yapısı ve okunabilirlik açısından profesyonelce düzenlemenizi (Polish) sağlayan modern bir **Vite + TypeScript** tek sayfa web uygulamasıdır (SPA).
 
 ---
 
-## Özellikler
+## 🌟 Öne Çıkan Özellikler
 
-- 🎙️ Tarayıcı `MediaRecorder` ile gerçek zamanlı kayıt
-- 🌍 Çoklu dil desteği (transkripsiyon dili seçimi)
-- 📝 **Transcribe:** `POST /api/transcribe` — ham ses → metin
-- ✨ **Polish:** `POST /api/polish` — noktalama, paragraf, okunabilirlik
-- 🌙 Karanlık / aydınlık tema
-- 📤 GitHub Pages deploy (`gh-pages`)
+* 🎙️ **Tarayıcı Tabanlı Ses Kaydı:** Tarayıcının yerleşik **MediaRecorder API**'sini kullanarak ek bir yazılım kurmadan doğrudan mikrofondan ses kaydı alır.
+* 🌍 **Çoklu Dil Desteği:** Transkripsiyon (metne dökme) işleminde Türkçe dahil olmak üzere farklı kaynak dilleri seçme desteği.
+* 📝 **Akıllı Transkripsiyon (`/api/transcribe`):** Ham ses dosyasını Gemini'ın multimodal (ses algılama) yeteneklerini kullanarak yüksek doğrulukta metne döker.
+* ✨ **AI Metin Düzenleme (`/api/polish`):** Transkript edilen ham metni; noktalama işaretleri ekleyerek, paragraflara bölerek ve okunabilirliği artırarak akıcı bir not haline getirir.
+* 🔬 **Markdown Önizleme:** Düzenlenmiş notlar, `marked` kütüphanesi ile zengin metin (Markdown) olarak anında önizlenebilir ve panoya kopyalanabilir veya indirilebilir.
+* 🛡️ **BFF Güvenlik Katmanı:** Tarayıcı tarafında API anahtarı ifşa edilmesini önlemek amacıyla tüm AI ağ istekleri **pages-bff** proxy katmanı üzerinden yönlendirilir.
 
 ---
 
-## Mimari
+## 🏗️ Mimarî İş Akışı
 
 ```
-speech-to-text (static)
-    │
-    ├─► VITE_BFF_URL → pages-bff.vercel.app/api/speech/*
-    │                      └─► gateway /api/transcribe | /api/polish
-    │
-    └─► (alternatif dev) VITE_API_URL + VITE_CLIENT_API_KEY → gateway doğrudan
+[ Mikrofon Girişi ] ──► [ MediaRecorder API (Tarayıcı) ] ──► [ Ses Dosyası (Blob) ]
+                                                                      │
+                                                            (POST /api/transcribe)
+                                                                      ▼
+[ Ham Transkript ] ◄──(Ses Dosyasını İşler)─────────────── [ Pages BFF (Vercel) ]
+      │
+      ├─► (Düzenleme İsteği - POST /api/polish)
+      ▼
+[ Gemini 3.5 Flash ] ──(Noktalama & Paragraf Ekleme)──► [ Marked Markdown Önizleme ]
 ```
 
-Production Pages build’inde **tercihen BFF** kullanın; API key bundle’a girmez.
+---
+
+## 🛠️ Teknoloji Stack
+
+* **Frontend:** Vite 6, TypeScript, Vanilla CSS (yüksek performanslı, hafif tasarım).
+* **Markdown Renderer:** `marked` kütüphanesi (Markdown önizleme ekranı için).
+* **Yapay Zeka API:** Google Gemini API (via [llm_api Gateway](https://github.com/yucel-gumus/llm_api)).
+* **BFF Proxy:** [pages-bff](https://github.com/yucel-gumus/pages-bff) (Vercel Serverless proxy).
 
 ---
 
-## Gateway endpoint’leri
+## 📂 Proje Klasör Yapısı
 
-| Endpoint | Gövde (özet) | Yanıt |
-|----------|--------------|--------|
-| `/api/transcribe` | Ses (base64 / blob ref), dil | Metin |
-| `/api/polish` | Ham transkript | Düzenlenmiş metin |
-
-Header: `X-API-Key: <CLIENT_API_KEY>` (BFF veya doğrudan çağrıda).
+```
+speech-to-text/
+├── src/
+│   ├── config/           # Ortam ve API yapılandırmaları
+│   ├── core/             # Ses kaydetme ve MediaRecorder yöneticisi
+│   ├── services/         # Transcribe ve Polish API servisleri
+│   ├── app.ts            # Arayüz güncellemeleri ve olay dinleyiciler
+│   └── main.ts           # Uygulama başlangıç noktası
+├── index.html
+├── index.css             # Özelleştirilmiş aydınlık/karanlık tema CSS'i
+├── tsconfig.json
+└── package.json
+```
 
 ---
 
-## Kurulum
+## 🚀 Kurulum ve Yerel Çalıştırma
 
+### 1. Bağımlılıkları Yükleyin
 ```bash
 git clone https://github.com/yucel-gumus/speech-to-text.git
 cd speech-to-text
 npm install
-cp .env.example .env
 ```
 
-### `.env` (geliştirme)
+### 2. Ortam Değişkenleri (`.env`)
+Proje kök dizininde `.env` oluşturun:
 
 ```env
+# Geliştirme Ortamı (Lokal Gateway bağlantısı)
 VITE_API_URL=https://api.yucelgumus.dev
-VITE_CLIENT_API_KEY=your_client_key
-# veya
+VITE_CLIENT_API_KEY=your_development_client_key
+
+# Üretim (Production) BFF bağlantısı (Önerilen)
 VITE_BFF_URL=https://pages-bff.vercel.app
 ```
 
+### 3. Geliştirme Sunucusunu Başlatma
 ```bash
 npm run dev
+```
+Uygulama `http://localhost:5173` adresinde başlayacaktır.
+
+### 4. GitHub Pages Üzerinden Yayına Alma (Deploy)
+Projenizi otomatik olarak derleyip GitHub Pages üzerine yüklemek için:
+```bash
+npm run build
+npm run deploy
 ```
 
 ---
 
-## GitHub Pages CI
-
-Repository **Variables** (Settings → Secrets and variables → Actions):
-
-| Variable | Açıklama |
-|----------|----------|
-| `VITE_API_URL` | Gateway base URL |
-| `VITE_CLIENT_API_KEY` veya `VITE_API_KEY` | Client key (BFF kullanılmıyorsa) |
-| `VITE_BFF_URL` | Önerilen: pages-bff origin |
-
-`main` push → workflow → `dist/` → `gh-pages` branch.
-
----
-
-## CORS
-
-Gateway `.env` içinde `ALLOWED_ORIGINS` listesine şunları ekleyin:
-
-- `https://yucel-gumus.github.io`
-- Yerel: `http://localhost:5173`
-
----
-
-## Teknoloji
-
-| Katman | Stack |
-|--------|--------|
-| UI | Vite 6, TypeScript, vanilla CSS |
-| Markdown | `marked` (polish önizleme) |
-| Backend | `python_backend` (FastAPI) |
-
----
-
-## İlgili projeler
-
-- [pages-bff](https://github.com/yucel-gumus/pages-bff) — Pages için güvenli proxy
-- [llm_api](https://github.com/yucel-gumus/llm_api) — Gateway kaynağı
-
----
-
-## Lisans
-
-Apache-2.0
+## 🔗 Canlı Bağlantılar
+* **Canlı Demo:** [https://yucel-gumus.github.io/speech-to-text/](https://yucel-gumus.github.io/speech-to-text/)
+* **API Gateway Kaynak Kodu:** [yucel-gumus/llm_api](https://github.com/yucel-gumus/llm_api)
