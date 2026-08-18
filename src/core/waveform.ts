@@ -6,7 +6,7 @@ export class WaveformVisualizer {
     private ctx: CanvasRenderingContext2D | null;
     private audioContext: AudioContext | null = null;
     private analyserNode: AnalyserNode | null = null;
-    private dataArray: Uint8Array | null = null;
+    private dataArray: Uint8Array<ArrayBuffer> | null = null;
     private animationId: number | null = null;
     private isRunning = false;
 
@@ -21,18 +21,31 @@ export class WaveformVisualizer {
         const dpr = window.devicePixelRatio || 1;
         const rect = this.canvas.getBoundingClientRect();
 
-        this.canvas.width = Math.round(rect.width * dpr);
-        this.canvas.height = Math.round(rect.height * dpr);
+        const width = rect.width || this.canvas.clientWidth || 300;
+        const height = rect.height || this.canvas.clientHeight || 80;
+
+        this.canvas.width = Math.round(width * dpr);
+        this.canvas.height = Math.round(height * dpr);
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    init(stream: MediaStream): void {
+    async init(stream: MediaStream): Promise<void> {
         if (this.audioContext) return;
 
         const AudioContextClass = window.AudioContext ||
             (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
 
-        this.audioContext = new AudioContextClass!();
+        if (!AudioContextClass) return;
+
+        this.audioContext = new AudioContextClass();
+        if (this.audioContext.state === 'suspended') {
+            try {
+                await this.audioContext.resume();
+            } catch (e) {
+                console.warn('AudioContext resume failed:', e);
+            }
+        }
+
         const source = this.audioContext.createMediaStreamSource(stream);
         this.analyserNode = this.audioContext.createAnalyser();
         this.analyserNode.fftSize = AUDIO_CONFIG.fftSize;
@@ -43,6 +56,9 @@ export class WaveformVisualizer {
     }
 
     start(): void {
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume().catch(console.warn);
+        }
         this.isRunning = true;
         this.draw();
     }

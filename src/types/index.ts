@@ -30,6 +30,6 @@ export interface DOMElements {
 export interface AudioVisualizerData {
     audioContext: AudioContext | null;
     analyserNode: AnalyserNode | null;
-    dataArray: Uint8Array | null;
+    dataArray: Uint8Array<ArrayBuffer> | null;
     animationId: number | null;
 }

@@ -23,6 +23,26 @@ export class AudioService {
         return this.stream;
     }
 
+    private getSupportedMimeType(): string {
+        if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') {
+            return '';
+        }
+        const candidateTypes = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/mp4',
+            'audio/aac',
+            'audio/ogg;codecs=opus',
+            'audio/wav',
+        ];
+        for (const type of candidateTypes) {
+            if (MediaRecorder.isTypeSupported(type)) {
+                return type;
+            }
+        }
+        return '';
+    }
+
     createRecorder(onDataAvailable: (blob: Blob) => void, onStop: () => void): MediaRecorder {
         if (!this.stream) {
             throw new Error('No active stream');
@@ -30,8 +50,13 @@ export class AudioService {
 
         this.audioChunks = [];
 
+        const preferredType = this.getSupportedMimeType();
         try {
-            this.mediaRecorder = new MediaRecorder(this.stream, { mimeType: 'audio/webm' });
+            if (preferredType) {
+                this.mediaRecorder = new MediaRecorder(this.stream, { mimeType: preferredType });
+            } else {
+                this.mediaRecorder = new MediaRecorder(this.stream);
+            }
         } catch {
             this.mediaRecorder = new MediaRecorder(this.stream);
         }

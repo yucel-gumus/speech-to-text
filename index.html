@@ -1,22 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
 
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/speech-to-text/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dictation App</title>
+  <title>Dictation App - AI Audio Note Studio</title>
   <link rel="stylesheet" href="/index.css">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script type="importmap">
-      {
-        "imports": {
-          "marked": "https://esm.sh/marked@^4.0.0"
-        }
-      }
-    </script>
 </head>
 
 <body>
@@ -24,23 +17,37 @@
     <div class="main-content">
       <div class="note-area">
         <div class="note-header">
-          <div class="editor-title" contenteditable="true" placeholder="Başlıksız Not">
+          <div class="editor-title" contenteditable="true" role="textbox" aria-multiline="false" aria-label="Not Başlığı" placeholder="Başlıksız Not">
             Başlıksız Not
           </div>
-          <div class="tab-navigation-container">
-            <div class="tab-navigation">
-              <button class="tab-button active" data-tab="note">Düzenlenmiş</button>
-              <button class="tab-button" data-tab="raw">Ham</button>
-              <div class="active-tab-indicator"></div>
+          <div class="note-header-actions">
+            <div class="tab-navigation-container">
+              <div class="tab-navigation" role="tablist">
+                <button class="tab-button active" data-tab="note" role="tab" aria-selected="true">Düzenlenmiş</button>
+                <button class="tab-button" data-tab="raw" role="tab" aria-selected="false">Ham</button>
+                <div class="active-tab-indicator"></div>
+              </div>
             </div>
+            <a
+              href="https://www.yucelgumus.dev/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="author-badge"
+              title="Geliştirici: Yücel Gümüş"
+              aria-label="Geliştirici Portfolyosu: Yücel Gümüş"
+            >
+              <span class="author-dot"></span>
+              <span class="author-text">Yücel Gümüş</span>
+              <i class="fas fa-arrow-up-right-from-square"></i>
+            </a>
           </div>
         </div>
 
         <div class="note-content-wrapper">
-          <div id="polishedNote" class="note-content active" contenteditable="true"
-            placeholder="Düzenlenmiş notlarınız burada görünecek..."></div>
-          <div id="rawTranscription" class="note-content" contenteditable="true"
-            placeholder="Ham transkripsiyon burada görünecek..."></div>
+          <div id="polishedNote" class="note-content active" contenteditable="true" role="textbox" aria-multiline="true"
+            aria-label="Düzenlenmiş Not" placeholder="Düzenlenmiş notlarınız burada görünecek..."></div>
+          <div id="rawTranscription" class="note-content" contenteditable="true" role="textbox" aria-multiline="true"
+            aria-label="Ham Transkripsiyon" placeholder="Ham transkripsiyon burada görünecek..."></div>
         </div>
       </div>
 
@@ -54,7 +61,7 @@
         </div>
 
         <div class="language-selector">
-          <select id="languageSelect" title="Dil Seçin">
+          <select id="languageSelect" title="Dil Seçin" aria-label="Kayıt Dili Seçin">
             <option value="tr" selected>🇹🇷 Türkçe</option>
             <option value="en">🇬🇧 English</option>
             <option value="de">🇩🇪 Deutsch</option>
@@ -74,11 +81,11 @@
         </div>
 
         <div class="recording-controls">
-          <button class="action-button" id="themeToggleButton" title="Temayı Değiştir">
+          <button class="action-button" id="themeToggleButton" title="Temayı Değiştir" aria-label="Temayı Değiştir">
             <i class="fas fa-sun"></i>
           </button>
 
-          <button id="recordButton" class="record-button" title="Kaydı Başlat/Durdur">
+          <button id="recordButton" class="record-button" title="Kaydı Başlat/Durdur" aria-label="Kaydı Başlat veya Durdur">
             <div class="record-button-inner">
               <i class="fas fa-microphone"></i>
             </div>
@@ -90,12 +97,12 @@
             <span class="record-text">Kaydet</span>
           </button>
 
-          <button class="action-button with-label" id="newButton" title="Yeni Not Oluştur">
+          <button class="action-button with-label" id="newButton" title="Yeni Not Oluştur" aria-label="Yeni Not Oluştur">
             <i class="fas fa-plus"></i>
             <span class="action-label">Yeni</span>
           </button>
 
-          <button class="action-button with-label" id="downloadNoteButton" title="Notu İndir">
+          <button class="action-button with-label" id="downloadNoteButton" title="Notu İndir" aria-label="Notu İndir">
             <i class="fas fa-download"></i>
             <span class="action-label">İndir</span>
           </button>
@@ -106,70 +113,6 @@
 
   <div id="micStatus" class="debug-panel"></div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const tabNav = document.querySelector(".tab-navigation");
-      const tabButtons = tabNav.querySelectorAll(".tab-button");
-      const activeTabIndicator = tabNav.querySelector(".active-tab-indicator");
-      const noteContents = document.querySelectorAll(".note-content");
-
-      function setActiveTab(activeButton, skipAnimation = false) {
-        if (!activeButton || !activeTabIndicator) return;
-
-        tabButtons.forEach((btn) => btn.classList.remove("active"));
-        activeButton.classList.add("active");
-
-        const tabName = activeButton.getAttribute("data-tab");
-        noteContents.forEach((content) => content.classList.remove("active"));
-
-        if (tabName === "raw") {
-          document.getElementById("rawTranscription").classList.add("active");
-        } else {
-          document.getElementById("polishedNote").classList.add("active");
-        }
-
-        const originalTransition = activeTabIndicator.style.transition;
-        if (skipAnimation) {
-          activeTabIndicator.style.transition = "none";
-        } else {
-          activeTabIndicator.style.transition = "";
-        }
-
-        activeTabIndicator.style.left = `${activeButton.offsetLeft}px`;
-        activeTabIndicator.style.width = `${activeButton.offsetWidth}px`;
-
-        if (skipAnimation) {
-          activeTabIndicator.offsetHeight;
-          activeTabIndicator.style.transition = originalTransition;
-        }
-      }
-
-      tabButtons.forEach((button) => {
-        button.addEventListener("click", (e) => {
-          setActiveTab(e.currentTarget);
-        });
-      });
-
-      const initiallyActiveButton = tabNav.querySelector(".tab-button.active");
-      if (initiallyActiveButton) {
-        requestAnimationFrame(() => {
-          setActiveTab(initiallyActiveButton, true);
-        });
-      }
-
-      window.addEventListener("resize", () => {
-        requestAnimationFrame(() => {
-          const currentActiveButton = tabNav.querySelector(".tab-button.active");
-          if (currentActiveButton) {
-            setActiveTab(currentActiveButton, true);
-          }
-        });
-      });
-    });
-  </script>
-  <footer style="text-align: center; padding: 1rem; font-size: 0.85rem; color: #666; font-family: system-ui, sans-serif; border-top: 1px solid rgba(0,0,0,0.1);">
-    <p>Geliştirici: <a href="https://www.yucelgumus.dev/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; font-weight: 600;">Yücel Gümüş</a></p>
-  </footer>
   <script type="module" src="/src/main.ts"></script>
 </body>
 

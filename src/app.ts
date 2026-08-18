@@ -8,6 +8,7 @@ import { WaveformVisualizer } from './core/waveform';
 import { RecordingTimer } from './core/timer';
 import { NoteManager } from './core/note-manager';
 import { RecordingUI } from './core/recording-ui';
+import { TabManager } from './core/tab-manager';
 import { blobToBase64, normalizeAudioMimeType } from './utils/audio';
 
 export class VoiceNotesApp {
@@ -18,8 +19,11 @@ export class VoiceNotesApp {
     private waveform: WaveformVisualizer | null = null;
     private timer: RecordingTimer;
     private noteManager: NoteManager;
+    private tabManager: TabManager;
     private recordingUI: RecordingUI;
     private isRecording = false;
+    private activeProcessId = 0;
+    private processingAbortController: AbortController | null = null;
 
     constructor() {
         this.elements = this.initElements();
@@ -33,6 +37,7 @@ export class VoiceNotesApp {
             this.elements.polishedNote,
             this.elements.editorTitle
         );
+        this.tabManager = new TabManager();
         this.recordingUI = new RecordingUI(
             this.elements.recordingInterface,
             this.elements.liveRecordingTitle,
@@ -83,7 +88,6 @@ export class VoiceNotesApp {
         this.elements.recordButton.addEventListener('click', () => this.toggleRecording());
         this.elements.newButton.addEventListener('click', () => this.createNewNote());
         this.elements.themeToggleButton.addEventListener('click', () => {
-            console.log('Theme toggle clicked');
             this.themeService.toggle();
         });
         this.elements.downloadNoteButton.addEventListener('click', () => this.downloadNote());
@@ -160,35 +164,62 @@ export class VoiceNotesApp {
     private async processAudio(audioBlob: Blob): Promise<void> {
         this.recordingUI.showProcessing();
 
+        if (this.processingAbortController) {
+            this.processingAbortController.abort();
+        }
+        const currentProcessId = ++this.activeProcessId;
+        const abortController = new AbortController();
+        this.processingAbortController = abortController;
+
         try {
             this.recordingUI.setStatus('Ses dönüştürülüyor...');
             const base64Audio = await blobToBase64(audioBlob);
             const mimeType = normalizeAudioMimeType(this.audioService.getMimeType());
 
+            if (currentProcessId !== this.activeProcessId) return;
+
             this.recordingUI.setStatus('Transkripsiyon alınıyor...');
             const langCode = this.getSelectedLanguage();
-            const transcription = await this.aiService.transcribe(base64Audio, mimeType, langCode);
+            const transcription = await this.aiService.transcribe(
+                base64Audio,
+                mimeType,
+                langCode,
+                abortController.signal
+            );
+
+            if (currentProcessId !== this.activeProcessId) return;
 
             if (transcription) {
                 this.noteManager.setRawTranscription(transcription);
                 this.recordingUI.setStatus('Transkripsiyon tamamlandı. Not düzenleniyor...');
-                await this.polishNote(transcription);
+                await this.polishNote(transcription, currentProcessId, abortController.signal);
             } else {
                 this.recordingUI.setStatus('Transkripsiyon başarısız oldu veya boş döndü.');
             }
         } catch (error) {
+            if (currentProcessId !== this.activeProcessId) return;
             console.error('Error processing audio:', error);
-            this.recordingUI.setStatus('Kayıt işlenirken hata oluştu. Lütfen tekrar deneyin.');
+            const msg = error instanceof Error ? error.message : 'Kayıt işlenirken hata oluştu.';
+            this.recordingUI.setStatus(`Hata: ${msg}`);
         } finally {
-            this.recordingUI.hideProcessing();
+            if (currentProcessId === this.activeProcessId) {
+                this.recordingUI.hideProcessing();
+                this.processingAbortController = null;
+            }
         }
     }
 
-    private async polishNote(rawTranscription: string): Promise<void> {
+    private async polishNote(
+        rawTranscription: string,
+        processId: number,
+        signal: AbortSignal
+    ): Promise<void> {
         try {
             this.recordingUI.setStatus('Not düzenleniyor...');
             const langCode = this.getSelectedLanguage();
-            const polishedText = await this.aiService.polish(rawTranscription, langCode);
+            const polishedText = await this.aiService.polish(rawTranscription, langCode, signal);
+
+            if (processId !== this.activeProcessId) return;
 
             if (polishedText) {
                 const htmlContent = marked.parse(polishedText);
@@ -198,8 +229,10 @@ export class VoiceNotesApp {
                 this.recordingUI.setStatus('Düzenleme başarısız oldu veya boş döndü.');
             }
         } catch (error) {
+            if (processId !== this.activeProcessId) return;
             console.error('Error polishing note:', error);
-            this.recordingUI.setStatus('Not düzenlenirken hata oluştu. Lütfen tekrar deneyin.');
+            const msg = error instanceof Error ? error.message : 'Not düzenlenirken hata oluştu.';
+            this.recordingUI.setStatus(`Hata: ${msg}`);
         }
     }
 
@@ -226,6 +259,13 @@ export class VoiceNotesApp {
     }
 
     private createNewNote(): void {
+        if (this.processingAbortController) {
+            this.processingAbortController.abort();
+            this.processingAbortController = null;
+        }
+        this.activeProcessId++;
+        this.recordingUI.hideProcessing();
+
         this.noteManager.createNew();
         this.recordingUI.setStatus('Kayıt için hazır');
 
@@ -238,8 +278,7 @@ export class VoiceNotesApp {
     }
 
     private downloadNote(): void {
-        const activeTab = document.querySelector('.tab-button.active') as HTMLElement;
-        const tabName = activeTab?.getAttribute('data-tab') || 'note';
+        const tabName = this.tabManager.getActiveTab();
         this.noteManager.download(tabName);
     }
 

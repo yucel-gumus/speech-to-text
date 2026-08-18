@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import type { Note } from '../types';
 import { downloadTextFile } from '../utils/dom';
 
@@ -45,21 +46,31 @@ export class NoteManager {
         if (this.currentNote) {
             this.currentNote.polishedNote = rawText;
         }
-        this.polishedNote.innerHTML = html;
+        const cleanHtml = DOMPurify.sanitize(html, {
+            USE_PROFILES: { html: true },
+        });
+        this.polishedNote.innerHTML = cleanHtml;
         this.updatePlaceholderState(this.polishedNote, rawText);
         this.extractAndSetTitle(rawText);
     }
 
     download(activeTab: string): void {
+        const rawTitle = this.editorTitle.textContent?.trim() || '';
+        const placeholder = this.editorTitle.getAttribute('placeholder') || '';
+        const hasCustomTitle = rawTitle && rawTitle !== placeholder;
+        const sanitizedTitle = hasCustomTitle
+            ? rawTitle.replace(/[^\w\s\u00C0-\u017F-]/gi, '').trim().replace(/\s+/g, '_').toLowerCase()
+            : 'sesli_not';
+
         let content = '';
-        let filename = 'not.txt';
+        let filename = `${sanitizedTitle}.txt`;
 
         if (activeTab === 'note') {
-            content = this.polishedNote.innerText || '';
-            filename = 'duzenlenmis_not.txt';
+            content = this.currentNote?.polishedNote || this.polishedNote.innerText || '';
+            filename = `${sanitizedTitle}.md`;
         } else {
-            content = this.rawTranscription.innerText || '';
-            filename = 'ham_not.txt';
+            content = this.currentNote?.rawTranscription || this.rawTranscription.innerText || '';
+            filename = `${sanitizedTitle}_ham.txt`;
         }
 
         downloadTextFile(content, filename);
