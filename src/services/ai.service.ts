@@ -1,6 +1,12 @@
-const BFF_URL =
-  import.meta.env.VITE_BFF_URL ||
-  (import.meta.env.PROD ? 'https://pages-bff.vercel.app' : 'http://127.0.0.1:3099');
+const API_URL =
+  import.meta.env.VITE_API_URL !== undefined && import.meta.env.VITE_API_URL !== ''
+    ? import.meta.env.VITE_API_URL
+    : (import.meta.env.DEV ? '' : 'https://api.yucelgumus.dev');
+
+const CLIENT_API_KEY =
+  import.meta.env.VITE_CLIENT_API_KEY ||
+  import.meta.env.VITE_API_KEY ||
+  '';
 
 const DEFAULT_TIMEOUT_MS = 45000; // 45 seconds timeout
 
@@ -27,9 +33,14 @@ export class AIService {
         }
 
         try {
-            const response = await fetch(`${BFF_URL}/api/speech/transcribe`, {
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (CLIENT_API_KEY) {
+                headers['X-API-Key'] = CLIENT_API_KEY;
+            }
+
+            const response = await fetch(`${API_URL}/api/speech/transcribe`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({
                     audio_base64: base64Audio,
                     mime_type: mimeType,
@@ -79,9 +90,14 @@ export class AIService {
         }
 
         try {
-            const response = await fetch(`${BFF_URL}/api/speech/polish`, {
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (CLIENT_API_KEY) {
+                headers['X-API-Key'] = CLIENT_API_KEY;
+            }
+
+            const response = await fetch(`${API_URL}/api/speech/polish`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({
                     raw_transcription: rawTranscription,
                     language: langCode

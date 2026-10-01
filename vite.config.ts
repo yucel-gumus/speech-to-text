@@ -5,10 +5,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   const production = mode === 'production';
 
-  const bff =
-    env.VITE_BFF_URL ||
-    process.env.VITE_BFF_URL ||
-    (production ? 'https://pages-bff.vercel.app' : 'http://127.0.0.1:3099');
+  const apiUrl = production
+    ? (env.VITE_API_URL || 'https://api.yucelgumus.dev')
+    : '';
 
   return {
     resolve: {
@@ -17,8 +16,17 @@ export default defineConfig(({ mode }) => {
         '@src': path.resolve(__dirname, './src'),
       },
     },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://127.0.0.1:8000',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
     define: {
-      'import.meta.env.VITE_BFF_URL': JSON.stringify(bff),
+      'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl),
     },
     build: {
       target: 'es2020',
