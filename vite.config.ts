@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const production = mode === 'production';
 
   const apiUrl = production
-    ? (env.VITE_API_URL || 'https://api.yucelgumus.dev')
+    ? (env.VITE_API_URL || 'https://python-backend-270384591051.europe-west3.run.app')
     : '';
 
   return {
