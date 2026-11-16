@@ -7,10 +7,7 @@ export function getStoredTheme(): ThemeMode {
     if (stored === 'light' || stored === 'dark') {
         return stored;
     }
-    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        return 'light';
-    }
-    return 'dark';
+    return 'light';
 }
 
 export function setStoredTheme(theme: ThemeMode): void {

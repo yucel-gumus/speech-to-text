@@ -85,8 +85,10 @@ export class RecordingUI {
         }
     }
 
-    setStatus(message: string): void {
+    setStatus(message: string, variant: 'default' | 'error' | 'success' = 'default'): void {
         this.recordingStatus.textContent = message;
+        this.recordingStatus.classList.toggle('is-error', variant === 'error');
+        this.recordingStatus.classList.toggle('is-success', variant === 'success');
     }
 
     showProcessing(): void {

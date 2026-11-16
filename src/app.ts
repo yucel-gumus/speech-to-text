@@ -155,7 +155,7 @@ export class VoiceNotesApp {
         if (audioBlob && audioBlob.size > 0) {
             this.processAudio(audioBlob);
         } else {
-            this.recordingUI.setStatus('Ses verisi yakalanamadı. Lütfen tekrar deneyin.');
+            this.recordingUI.setStatus('Ses verisi yakalanamadı. Lütfen tekrar deneyin.', 'error');
         }
 
         this.audioService.releaseStream();
@@ -194,13 +194,13 @@ export class VoiceNotesApp {
                 this.recordingUI.setStatus('Transkripsiyon tamamlandı. Not düzenleniyor...');
                 await this.polishNote(transcription, currentProcessId, abortController.signal);
             } else {
-                this.recordingUI.setStatus('Transkripsiyon başarısız oldu veya boş döndü.');
+                this.recordingUI.setStatus('Transkripsiyon başarısız oldu veya boş döndü.', 'error');
             }
         } catch (error) {
             if (currentProcessId !== this.activeProcessId) return;
             console.error('Error processing audio:', error);
             const msg = error instanceof Error ? error.message : 'Kayıt işlenirken hata oluştu.';
-            this.recordingUI.setStatus(`Hata: ${msg}`);
+            this.recordingUI.setStatus(`Hata: ${msg}`, 'error');
         } finally {
             if (currentProcessId === this.activeProcessId) {
                 this.recordingUI.hideProcessing();
@@ -224,15 +224,15 @@ export class VoiceNotesApp {
             if (polishedText) {
                 const htmlContent = marked.parse(polishedText);
                 this.noteManager.setPolishedNote(htmlContent as string, polishedText);
-                this.recordingUI.setStatus('Not düzenlendi. Yeni kayıt için hazır.');
+                this.recordingUI.setStatus('Not düzenlendi. Yeni kayıt için hazır.', 'success');
             } else {
-                this.recordingUI.setStatus('Düzenleme başarısız oldu veya boş döndü.');
+                this.recordingUI.setStatus('Düzenleme başarısız oldu veya boş döndü.', 'error');
             }
         } catch (error) {
             if (processId !== this.activeProcessId) return;
             console.error('Error polishing note:', error);
             const msg = error instanceof Error ? error.message : 'Not düzenlenirken hata oluştu.';
-            this.recordingUI.setStatus(`Hata: ${msg}`);
+            this.recordingUI.setStatus(`Hata: ${msg}`, 'error');
         }
     }
 
@@ -250,7 +250,7 @@ export class VoiceNotesApp {
             statusMessage = 'Mikrofona erişilemiyor. Başka bir uygulama tarafından kullanılıyor olabilir.';
         }
 
-        this.recordingUI.setStatus(statusMessage);
+        this.recordingUI.setStatus(statusMessage, 'error');
         this.isRecording = false;
         this.audioService.reset();
         this.recordingUI.setRecordingState(false);

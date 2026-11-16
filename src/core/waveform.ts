@@ -107,7 +107,9 @@ export class WaveformVisualizer {
         const barSpacing = Math.max(0, Math.floor(totalBarPlusSpacingWidth * 0.3));
 
         let x = 0;
-        this.ctx.fillStyle = getRecordingColor();
+        const activeBarColor = getRecordingColor() || '#EC7D55';
+        const peakBarColor = '#AB421C';
+        const quietBarColor = '#3E5164';
 
         for (let i = 0; i < numBars; i++) {
             if (x >= logicalWidth) break;
@@ -116,8 +118,16 @@ export class WaveformVisualizer {
             const barHeightNormalized = this.dataArray[dataIndex] / 255.0;
             let barHeight = barHeightNormalized * logicalHeight;
 
-            if (barHeight < 1 && barHeight > 0) barHeight = 1;
+            if (barHeight < 2) barHeight = 2;
             barHeight = Math.round(barHeight);
+
+            if (barHeightNormalized >= 0.65) {
+                this.ctx.fillStyle = peakBarColor;
+            } else if (barHeightNormalized >= 0.22) {
+                this.ctx.fillStyle = activeBarColor;
+            } else {
+                this.ctx.fillStyle = quietBarColor;
+            }
 
             const y = Math.round((logicalHeight - barHeight) / 2);
             this.ctx.fillRect(Math.floor(x), y, barWidth, barHeight);

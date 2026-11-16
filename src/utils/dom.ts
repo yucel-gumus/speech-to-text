@@ -39,7 +39,7 @@ export function downloadTextFile(content: string, filename: string): void {
 }
 
 export function getRecordingColor(): string {
-    return getComputedStyle(document.documentElement)
+    return getComputedStyle(document.body)
         .getPropertyValue('--color-recording')
-        .trim() || '#ff3b30';
+        .trim() || '#EC7D55';
 }

@@ -23,14 +23,14 @@ export class ThemeService {
     private applyTheme(theme: ThemeMode): void {
         if (!this.toggleIcon) return;
 
-        if (theme === 'light') {
-            document.body.classList.add('light-mode');
-            this.toggleIcon.classList.remove('fa-sun');
-            this.toggleIcon.classList.add('fa-moon');
-        } else {
-            document.body.classList.remove('light-mode');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
             this.toggleIcon.classList.remove('fa-moon');
             this.toggleIcon.classList.add('fa-sun');
+        } else {
+            document.body.classList.remove('dark-mode');
+            this.toggleIcon.classList.remove('fa-sun');
+            this.toggleIcon.classList.add('fa-moon');
         }
     }
 }
